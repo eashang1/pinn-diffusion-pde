@@ -1,0 +1,104 @@
+black_scholes:
+
+  spot_range:
+    min: 0.0
+    max: 400.0 # dollars
+
+  time_to_expiry: 0.02  # years
+
+  value_range:
+    min: 0.0
+    max: 50.0
+
+  strike: 200.0
+  volatility: 0.2
+  risk_free_rate: 0.05
+  dividend_rate: 0.03
+  is_call: true
+
+  training:
+    epochs: 8000
+    learning_rate: 0.001
+    n_collocation: 1000
+    pde_weight: 1.0
+    boundary_weight: 10.0
+    initial_weight: 10.0
+    print_freq: 1000
+
+
+heat_equation:
+
+  spatial_range:
+    min: 0.0
+    max: 1.0
+
+  time_range:
+    min: 0.0
+    max: 0.1
+
+  value_range:
+    min: -1.0
+    max: 1.0
+
+  diffusivity: 0.01
+
+  training:
+    epochs_fresh: 5000
+    epochs_transfer: 3000
+    learning_rate: 0.001
+    n_collocation: 1000
+    pde_weight: 1.0
+    boundary_weight: 10.0
+    initial_weight: 10.0
+    print_freq: 1000
+
+  evaluation:
+    test_times: [0.02, 0.05, 0.08]
+    n_spatial_points: 50
+
+
+finite_difference:
+
+  n_spot_points: 400
+  n_time_points: 100
+
+  spot_multiplier: 2.0  # Grid spans [0, spot * spot_multiplier]
+
+  min_variance: 1.0e-9
+
+
+transfer_learning:
+  source_pde: "black_scholes"
+  target_pde: "heat_equation"
+
+  expected_improvement: true
+  accuracy_threshold: 0.10  # 10% relative error
+
+
+network:
+  input_dim: 2  # (space, time)
+  output_dim: 1
+  hidden_layers: [64, 64, 64]
+  activation: "tanh"
+  initialization: "xavier"
+
+
+optimizer:
+  type: "adam"
+  scheduler:
+    type: "reduce_on_plateau"
+    patience: 1000
+    factor: 0.8
+    mode: "min"
+
+
+hardware:
+  device: "auto"
+  precision: "float32"
+
+
+logging:
+  save_losses: true
+  save_models: true
+  output_dir: "results"
+  plot_results: true
