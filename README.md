@@ -113,10 +113,3 @@ The finite difference verification script (`run_fd_verification.py`) validates t
 ├── run_transfer_learning.py     # Main experiment
 └── run_fd_verification.py       # FD validation
 ```
-- Coordinate normalization/denormalization
-- PDE residual computation
-- Boundary and initial conditions
-- Training convergence
-- Transfer learning mechanics
-
-Run tests: `pytest tests/ -v`
