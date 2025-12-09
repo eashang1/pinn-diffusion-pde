@@ -5,8 +5,6 @@ from .network import create_pinn_network, get_device
 
 
 class NormalizedPINN:
-    """PINN that operates in normalized [0,1] space for transfer learning."""
-
     def __init__(self, problem_config: Dict):
         self.S_min, self.S_max = problem_config['S_range']
         self.t_min, self.t_max = problem_config['t_range']
@@ -37,16 +35,6 @@ class NormalizedPINN:
         return V_phys
 
     def forward(self, S: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass in physical coordinates.
-
-        Args:
-            S: Spatial coordinate (physical units)
-            t: Time coordinate (physical units)
-
-        Returns:
-            V: Solution value (physical units)
-        """
         S_norm, t_norm = self.normalize_inputs(S, t)
         inputs = torch.cat([S_norm.unsqueeze(-1), t_norm.unsqueeze(-1)], dim=-1)
         V_norm = self.net(inputs).squeeze()
@@ -57,35 +45,11 @@ class NormalizedPINN:
         S_norm: torch.Tensor,
         t_norm: torch.Tensor
     ) -> torch.Tensor:
-        """
-        Forward pass in normalized coordinates (for internal use).
-
-        Args:
-            S_norm: Normalized spatial coordinate [0, 1]
-            t_norm: Normalized time coordinate [0, 1]
-
-        Returns:
-            V_norm: Normalized solution value [0, 1]
-        """
         inputs = torch.cat([S_norm.unsqueeze(-1), t_norm.unsqueeze(-1)], dim=-1)
         return self.net(inputs).squeeze()
 
     def compute_pde_loss(self, S: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        """
-        Compute PDE residual loss at collocation points.
-
-        The PDE loss enforces that the network satisfies the differential equation
-        at randomly sampled interior points. We use automatic differentiation to
-        compute exact derivatives in normalized space, then transform to physical
-        space using the chain rule.
-
-        Args:
-            S: Spatial coordinates for collocation points (physical units)
-            t: Time coordinates for collocation points (physical units)
-
-        Returns:
-            Mean squared PDE residual
-        """
+        # Compute derivatives in normalized space, then transform to physical via chain rule
         S_norm, t_norm = self.normalize_inputs(S, t)
         S_norm.requires_grad_(True)
         t_norm.requires_grad_(True)
@@ -136,22 +100,7 @@ class NormalizedPINN:
         S: torch.Tensor,
         V: torch.Tensor
     ) -> torch.Tensor:
-        """
-        Compute Black-Scholes PDE residual.
-
-        Black-Scholes PDE:
-            ∂V/∂t + 0.5*σ²*S²*∂²V/∂S² + (r-q)*S*∂V/∂S - r*V = 0
-
-        Args:
-            V_t: Time derivative
-            V_S: First spatial derivative (delta)
-            V_SS: Second spatial derivative (gamma)
-            S: Spot price
-            V: Option value
-
-        Returns:
-            PDE residual (should be zero if solution is exact)
-        """
+        # Black-Scholes: ∂V/∂t + 0.5*σ²*S²*∂²V/∂S² + (r-q)*S*∂V/∂S - r*V = 0
         sigma = torch.full_like(S, self.params.get('volatility', 0.2))
         r = torch.full_like(S, self.params.get('risk_free_rate', 0.05))
         q = torch.full_like(S, self.params.get('dividend_rate', 0.03))
@@ -163,33 +112,11 @@ class NormalizedPINN:
         V_t: torch.Tensor,
         V_SS: torch.Tensor
     ) -> torch.Tensor:
-        """
-        Compute heat equation residual.
-
-        Heat equation:
-            ∂u/∂t - α*∂²u/∂x² = 0
-
-        Args:
-            V_t: Time derivative
-            V_SS: Second spatial derivative
-
-        Returns:
-            PDE residual (should be zero if solution is exact)
-        """
+        # Heat equation: ∂u/∂t - α*∂²u/∂x² = 0
         alpha = self.params.get('diffusivity', 0.01)
         return V_t - alpha * V_SS
 
     def compute_boundary_loss(self) -> torch.Tensor:
-        """
-        Compute boundary condition loss.
-
-        Boundary conditions depend on the PDE type:
-        - Black-Scholes: Terminal payoff + spatial boundaries
-        - Heat: Dirichlet boundaries u(0,t) = u(1,t) = 0
-
-        Returns:
-            Mean squared boundary condition loss
-        """
         if self.pde_type == 'black_scholes':
             return self._compute_bs_boundary_loss()
         elif self.pde_type == 'heat':
@@ -198,7 +125,6 @@ class NormalizedPINN:
             raise ValueError(f"Unknown PDE type: {self.pde_type}")
 
     def _compute_bs_boundary_loss(self) -> torch.Tensor:
-        """Compute Black-Scholes boundary and terminal condition losses."""
         losses = []
 
         # Terminal condition: V(S, T) = payoff(S)
@@ -269,7 +195,6 @@ class NormalizedPINN:
         return sum(losses)
 
     def _compute_heat_boundary_loss(self) -> torch.Tensor:
-        """Compute heat equation Dirichlet boundary conditions."""
         t_boundary_norm = torch.linspace(0, 1, 50, device=self.device, requires_grad=True)
 
         # Dirichlet boundaries: u(0,t) = u(1,t) = 0
@@ -293,14 +218,6 @@ class NormalizedPINN:
         )
 
     def compute_initial_condition_loss(self) -> torch.Tensor:
-        """
-        Compute initial condition loss (heat equation only).
-
-        For heat equation: u(x, 0) = sin(πx)
-
-        Returns:
-            Mean squared initial condition loss
-        """
         if self.pde_type != 'heat':
             return torch.tensor(0.0, device=self.device)
 

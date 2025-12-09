@@ -1,15 +1,3 @@
-"""
-Transfer Learning Experiment: Black-Scholes to Heat Equation
-
-This experiment tests whether PINNs learn transferable mathematical structure
-by training on Black-Scholes PDE and transferring to Heat equation. The key
-hypothesis is that normalization enables transfer across mathematically similar
-but physically different domains.
-
-Expected Result: Transfer learning should outperform training from scratch,
-demonstrating that the network learns fundamental diffusion physics rather
-than problem-specific patterns.
-"""
 
 import sys
 from pathlib import Path
@@ -30,20 +18,6 @@ from src.training.trainer import (
 
 
 def run_transfer_learning_experiment():
-    """
-    Execute the full transfer learning experiment.
-
-    Steps:
-        1. Train PINN on Black-Scholes PDE
-        2. Validate Black-Scholes PINN accuracy
-        3. Transfer weights to Heat equation PINN
-        4. Fine-tune on Heat equation
-        5. Train fresh Heat equation PINN from scratch
-        6. Compare transfer vs. fresh training
-
-    Returns:
-        Dictionary with experiment results
-    """
     print("=" * 70)
     print("PHYSICS-INFORMED NEURAL NETWORK: TRANSFER LEARNING EXPERIMENT")
     print("=" * 70)

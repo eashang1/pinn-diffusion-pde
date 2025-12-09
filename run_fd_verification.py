@@ -1,12 +1,3 @@
-"""
-Finite Difference Verification for American Options
-
-This script verifies the finite difference solver implementation using either:
-1. Real market data from Midas API (if available)
-2. Synthetic data for testing
-
-The FD solver provides a reference solution for validating PINN accuracy.
-"""
 
 import sys
 from pathlib import Path
@@ -22,27 +13,13 @@ from src.training.trainer import train_pinn
 import torch
 
 
-def run_fd_verification(use_market_data: bool = False):
-    """
-    Run finite difference verification experiment.
-
-    Args:
-        use_market_data: If True, attempt to load real market data from Midas.
-                        If False, use synthetic data.
-
-    Returns:
-        Dictionary with verification results
-    """
+def run_fd_verification():
     print("=" * 70)
     print("FINITE DIFFERENCE VERIFICATION")
     print("=" * 70)
 
     # Load data
     loader = OptionsDataLoader()
-
-    if use_market_data:
-        print("\n⚠️  Note: Real market data from ml2/Midas is not available.")
-        print("Using realistic synthetic data based on market conditions...\n")
 
     print("Generating realistic options data...")
     market_data = loader.generate_realistic_data(
@@ -158,4 +135,4 @@ def run_fd_verification(use_market_data: bool = False):
 
 
 if __name__ == '__main__':
-    results = run_fd_verification(use_market_data=False)
+    results = run_fd_verification()
