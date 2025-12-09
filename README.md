@@ -45,7 +45,7 @@ V_norm = (V - V_min) / (V_max - V_min)
 ```
 
 ### 2. Automatic Differentiation
-Derivatives are computed via PyTorch autograd in normalized space, then transformed to physical space using the chain rule:
+Derivatives are computed via autograd in normalized space, then transformed to physical space using the chain rule:
 
 ```
 ∂V/∂t_phys = (∂V/∂t_norm) · (V_scale / t_scale)
@@ -113,11 +113,6 @@ The finite difference verification script (`run_fd_verification.py`) validates t
 ├── run_transfer_learning.py     # Main experiment
 └── run_fd_verification.py       # FD validation
 ```
-
-## Testing
-
-Comprehensive test suite covering:
-- Network architecture and initialization
 - Coordinate normalization/denormalization
 - PDE residual computation
 - Boundary and initial conditions
